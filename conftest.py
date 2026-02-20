@@ -4,11 +4,7 @@ from utils.logger import get_logger
 from utils.api_client import APIClient
 
 
-@pytest.fixture
-def logger(request):
-    return get_logger(request.module.__name__)
-
-
-@pytest.fixture
-def api_client(logger):
+@pytest.fixture(scope="module")
+def api_client(request):
+    logger = get_logger(request.module.__name__)
     return APIClient(BASE_URL, HEADERS, logger)
