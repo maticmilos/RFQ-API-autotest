@@ -40,6 +40,9 @@ def test_p1_private_label_ranking_flag_has_no_effect(api_client: APIClient, case
     response_json_true = response_true.json()
     products_true = get_matched_products(response_json_true)
 
+    assert len(products_false) > 0, "No products returned with flag=False"
+    assert len(products_true) > 0, "No products returned with flag=True"
+
     skus_false = [p.get("sku") for p in products_false]
     skus_true = [p.get("sku") for p in products_true]
 
@@ -63,17 +66,18 @@ def test_p2_high_percentage_score_for_irrelevant_product(api_client: APIClient, 
     response_json = response.json()
     matched_products = get_matched_products(response_json)
 
-    if len(matched_products) > 0:
-        top_product = matched_products[0]
-        product_name = top_product.get("name", "").lower()
-        percentage = top_product.get("percentage", 0)
+    assert len(matched_products) > 0, "No matched products returned"
 
-        logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
+    top_product = matched_products[0]
+    product_name = top_product.get("name", "").lower()
+    percentage = top_product.get("percentage", 0)
 
-        is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+    logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
 
-        assert is_relevant, \
-            f"Top product '{top_product.get('name')}' ({percentage}%) not relevant. Expected keywords: {case['expected_keywords']}"
+    is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+
+    assert is_relevant, \
+        f"Top product '{top_product.get('name')}' ({percentage}%) not relevant. Expected keywords: {case['expected_keywords']}"
 
 
 @pytest.mark.positive
@@ -92,19 +96,18 @@ def test_p3_url_upload_returns_wrong_website_content(api_client: APIClient, case
 
     logger.info(f"URL extraction returned {len(matched_products)} matched products")
 
-    if len(matched_products) > 0:
-        top_product = matched_products[0]
-        product_name = top_product.get("name", "").lower()
-        percentage = top_product.get("percentage", 0)
+    assert len(matched_products) > 0, "No matched products returned - URL extraction failed"
 
-        logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
+    top_product = matched_products[0]
+    product_name = top_product.get("name", "").lower()
+    percentage = top_product.get("percentage", 0)
 
-        is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+    logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
 
-        assert is_relevant, \
-            f"URL extracted wrong content - top product '{top_product.get('name')}' not relevant. Expected keywords: {case['expected_keywords']}"
-    else:
-        logger.warning("No matched products returned - URL extraction may have failed")
+    is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+
+    assert is_relevant, \
+        f"URL extracted wrong content - top product '{top_product.get('name')}' not relevant. Expected keywords: {case['expected_keywords']}"
 
 
 @pytest.mark.positive
@@ -125,20 +128,23 @@ def test_p4_percentage_score_inconsistent_for_same_product(api_client: APIClient
         response_json = response.json()
         matched_products = get_matched_products(response_json)
 
-        if len(matched_products) > 0:
-            score = matched_products[0].get("percentage", 0)
-            scores.append(score)
-            logger.info(f"Attempt {attempt} percentage: {score}%")
+        assert len(matched_products) > 0, f"Attempt {attempt}: No products returned"
 
-    if len(scores) == case["attempts"]:
-        max_score = max(scores)
-        min_score = min(scores)
-        variation = max_score - min_score
+        score = matched_products[0].get("percentage", 0)
+        scores.append(score)
+        logger.info(f"Attempt {attempt} percentage: {score}%")
 
-        logger.info(f"Score variation: {variation}% (max: {max_score}%, min: {min_score}%)")
+    assert len(scores) == case["attempts"], \
+        f"Expected {case['attempts']} scores, got {len(scores)}"
 
-        assert variation <= case["max_variation"], \
-            f"Percentage scores should be consistent (±{case['max_variation']}%), got variation of {variation}%: {scores}"
+    max_score = max(scores)
+    min_score = min(scores)
+    variation = max_score - min_score
+
+    logger.info(f"Score variation: {variation}% (max: {max_score}%, min: {min_score}%)")
+
+    assert variation <= case["max_variation"], \
+        f"Percentage scores should be consistent (±{case['max_variation']}%), got variation of {variation}%: {scores}"
 
 
 @pytest.mark.positive
@@ -155,17 +161,18 @@ def test_p5_missing_product_key_information_in_results(api_client: APIClient, ca
     response_json = response.json()
     matched_products = get_matched_products(response_json)
 
-    if len(matched_products) > 0:
-        product = matched_products[0]
-        logger.info(f"Product fields present: {list(product.keys())}")
+    assert len(matched_products) > 0, "No matched products returned - cannot validate field completeness"
 
-        missing_core_fields = []
+    product = matched_products[0]
+    logger.info(f"Product fields present: {list(product.keys())}")
 
-        for field in case["required_fields"]:
-            if field not in product or not product[field]:
-                missing_core_fields.append(field)
+    missing_core_fields = []
 
-        assert len(missing_core_fields) == 0, \
-            f"Product missing core fields: {missing_core_fields}. Product has: {list(product.keys())}"
+    for field in case["required_fields"]:
+        if field not in product or not product[field]:
+            missing_core_fields.append(field)
 
-        logger.info(f"Product: {product.get('name')}, SKU: {product.get('sku')}, Vendor: {product.get('vendor', {}).get('name')}")
+    assert len(missing_core_fields) == 0, \
+        f"Product missing core fields: {missing_core_fields}. Product has: {list(product.keys())}"
+
+    logger.info(f"Product: {product.get('name')}, SKU: {product.get('sku')}, Vendor: {product.get('vendor', {}).get('name')}")
