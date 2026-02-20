@@ -1,7 +1,3 @@
-"""
-Negative test scenarios - API errors and failures
-Tests for bugs N1-N5
-"""
 import json
 import pytest
 from config.config import ENDPOINTS

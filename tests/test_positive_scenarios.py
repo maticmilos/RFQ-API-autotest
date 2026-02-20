@@ -1,7 +1,3 @@
-"""
-Positive test scenarios - wrong behavior when API works
-Tests for bugs P1-P5
-"""
 import json
 import pytest
 from config.config import ENDPOINTS
