@@ -117,13 +117,14 @@
   "p3_url_extraction_cases": [
     {
       "payload": {
-        "url": "https://www.example.com/product/kitchen-knife",
+        "url": "https://www.amazon.com/imarku-Japanese-Chef-Knife-Christmas/dp/B01DDBJF12",
         "topK": 3,
         "threshold": 0.5
       },
       "expected_status": 200,
       "expected_response": {},
-      "desc": "example product url"
+      "expected_keywords": ["knife", "chef", "kitchen", "blade"],
+      "desc": "amazon chef knife"
     }
   ],
   "p4_consistency_cases": [

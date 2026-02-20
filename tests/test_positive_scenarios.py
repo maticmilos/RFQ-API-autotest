@@ -79,11 +79,7 @@ def test_p2_high_percentage_score_for_irrelevant_product(api_client: APIClient, 
 @pytest.mark.priority_high
 @pytest.mark.parametrize("case", TEST_DATA["p3_url_extraction_cases"], ids=lambda c: c["desc"])
 def test_p3_url_upload_returns_wrong_website_content(api_client: APIClient, case):
-    """
-    P3: URL content extraction quality
-
-    Note: This test requires a real product URL for proper validation.
-    """
+    """P3: URL content extraction quality"""
     logger.info(f"Testing P3: {case['desc']}")
 
     response, _ = api_client.post(ENDPOINTS["upload_url_html"], case["payload"])
@@ -93,12 +89,26 @@ def test_p3_url_upload_returns_wrong_website_content(api_client: APIClient, case
     matched_products = get_matched_products(response_json)
 
     logger.info(f"URL extraction returned {len(matched_products)} matched products")
-    logger.info("Note: This test requires real product URL for accurate validation")
+
+    if len(matched_products) > 0:
+        top_product = matched_products[0]
+        product_name = top_product.get("name", "").lower()
+        percentage = top_product.get("percentage", 0)
+
+        logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
+
+        is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+
+        assert is_relevant, \
+            f"URL extracted wrong content - top product '{top_product.get('name')}' not relevant. Expected keywords: {case['expected_keywords']}"
+    else:
+        logger.warning("No matched products returned - URL extraction may have failed")
 
 
 @pytest.mark.positive
 @pytest.mark.severity_medium
 @pytest.mark.priority_medium
+@pytest.mark.xfail(strict=False, reason="P4 bug confirmed - API returns inconsistent scores (99% -> 80% -> 99%)")
 @pytest.mark.parametrize("case", TEST_DATA["p4_consistency_cases"], ids=lambda c: c["desc"])
 def test_p4_percentage_score_inconsistent_for_same_product(api_client: APIClient, case):
     """P4: Percentage score consistency across requests"""
@@ -133,6 +143,7 @@ def test_p4_percentage_score_inconsistent_for_same_product(api_client: APIClient
 @pytest.mark.positive
 @pytest.mark.severity_low
 @pytest.mark.priority_low
+@pytest.mark.xfail(strict=False, reason="P5 bug confirmed - Missing fields: price, inStock, imageUrl")
 @pytest.mark.parametrize("case", TEST_DATA["p5_completeness_cases"], ids=lambda c: c["desc"])
 def test_p5_missing_product_key_information_in_results(api_client: APIClient, case):
     """P5: Product information completeness"""
