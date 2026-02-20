@@ -114,13 +114,14 @@ Note: API key is not logged for security.
 **Positive Scenarios (P1-P5):**
 - P1: Private label ranking flag has no effect - PASS (bug confirmed, flag changes order)
 - P2: High % for irrelevant product - PASS (top result is relevant)
-- P3: URL upload returns wrong content - PASS (validates extracted product relevance)
-- P4: Percentage score inconsistent - XFAIL (bug confirmed: scores vary 99% -> 80% -> 99%)
-- P5: Missing product fields - XFAIL (bug confirmed: missing price, inStock, imageUrl)
+- P3: URL upload returns wrong content - PASS/FAIL (flaky - sometimes extracts wrong product)
+- P4: Percentage score inconsistent - FAIL (bug confirmed: scores vary 99% -> 80% -> 99%)
+- P5: Missing product fields - FAIL (bug confirmed: missing price, inStock, imageUrl)
 
-**Summary:** 10 passed, 2 xfailed (expected failures)
+**Summary:** 9 passed, 3 failed
 
-Note: XFAIL tests run and validate bugs exist, but don't fail CI pipeline.
+**Note on failing tests:**
+P3, P4, and P5 failures represent confirmed bugs in the API, not issues with the test framework. These tests correctly validate expected behavior and expose real API problems that need to be fixed.
 
 ## API Endpoints
 

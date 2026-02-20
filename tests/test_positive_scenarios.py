@@ -110,7 +110,6 @@ def test_p3_url_upload_returns_wrong_website_content(api_client: APIClient, case
 @pytest.mark.positive
 @pytest.mark.severity_medium
 @pytest.mark.priority_medium
-@pytest.mark.xfail(strict=False, reason="P4 bug confirmed - API returns inconsistent scores (99% -> 80% -> 99%)")
 @pytest.mark.parametrize("case", TEST_DATA["p4_consistency_cases"], ids=lambda c: c["desc"])
 def test_p4_percentage_score_inconsistent_for_same_product(api_client: APIClient, case):
     """P4: Percentage score consistency across requests"""
@@ -145,7 +144,6 @@ def test_p4_percentage_score_inconsistent_for_same_product(api_client: APIClient
 @pytest.mark.positive
 @pytest.mark.severity_low
 @pytest.mark.priority_low
-@pytest.mark.xfail(strict=False, reason="P5 bug confirmed - Missing fields: price, inStock, imageUrl")
 @pytest.mark.parametrize("case", TEST_DATA["p5_completeness_cases"], ids=lambda c: c["desc"])
 def test_p5_missing_product_key_information_in_results(api_client: APIClient, case):
     """P5: Product information completeness"""
