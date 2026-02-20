@@ -1,0 +1,253 @@
+Setvi-Task
+Task – Read this document and create Automation Test Cases for different
+Negative and Positive Scenarios.
+Module: AI-powered RFQ (Request for Quote)
+Endpoints: POST /api/rfq/upload-free-text,
+POST /api/rfq/upload-url-html
+Environment: Development (https://intelligence-dev.setvi.com)
+API Key: abcd1234
+Postman URL Collection:
+https://extemporeapp.postman.co/workspace/abcd12345678
+Bug ID Title Severity Priority Status
+N1 Empty Text Returns 200 N2 Invalid URL → Server 500 N3 Threshold Parameter Ignored N4 topK Always Returns 5 N5 Special Characters Break P1 Private Label Flag No Effect P2 High Score for Wrong Product P3 URL Extracts Wrong Content P4 Similarity Score Inconsistent P5 Missing Product Fields Medium High New
+High High New
+High Medium New
+Medium Medium New
+Low Low New
+Medium Medium New
+High High New
+High High New
+Medium Medium New
+Low Low New
+NEGATIVE BUGS - API errors, failures, bad behavior
+Bug N1: Empty Text Returns 200 Instead of 400
+Title: Empty text input incorrectly returns 200 OK instead of an error
+Environment: Development, Postman v11.0, Windows 11
+Severity: Medium
+Priority: High
+Steps to Reproduce:
+1. Open Postman, set the Authorization header to ApiKey {{apiKey}}
+2. Send a POST request to https://intelligence-dev.setvi.com/api/rfq/upload-free-
+text
+3. Set the body to:
+json
+{
+"text": "",
+"topK": 3,
+"threshold": 0.5,
+"enablePrivateLabelRanking": false
+}
+4. Send request
+Actual Result:
+- Status: 200 OK
+- Response body: {"statusId": "abc123", "matchedProducts": []}
+- No error message
+Expected Result:
+- Status: 400 Bad Request
+- Response body should contain an error like: {"error": "Validation failed", "message":
+"Text cannot be empty"}
+Bug N2: Invalid URL Causes Server Error 500
+Title: Invalid URL format triggers unhandled server exception (500)
+Environment: Development, Postman v11.0
+Severity: High
+Priority: High
+Steps to Reproduce:
+1. Send POST to https://intelligence-dev.setvi.com/api/rfq/upload-url-html
+2. Set the body to:
+json
+{
+"url": "not-a-valid-url-format",
+"topK": 3,
+"threshold": 0.5
+}
+3. Send request
+Actual Result:
+- Status: 500 Internal Server Error
+- Response: {"type":"https://tools.ietf.org/html/rfc7231#section-
+6.6.1","title":"Internal Server Error","status":500,"traceId":"00-abcd1234"}
+Expected Result:
+- Status: 400 Bad Request
+- Response: {"error": "Invalid URL", "message": "Please provide a valid URL starting
+with http:// or https://"}
+Bug N3: Threshold Parameter Ignored - Low Scores Included
+Title: threshold=0.8 still returns products with 0.4 similarity
+Environment: Development, Postman v11.0
+Severity: High
+Priority: Medium
+Steps to Reproduce:
+1. Send POST to /upload-free-text with body:
+json
+{
+"text": "Cutting Board",
+"topK": 5,
+"threshold": 0.8,
+"enablePrivateLabelRanking": false
+}
+2. Check response
+Actual Result:
+- Returns products with similarity scores: 0.85, 0.72, 0.61, 0.45, 0.38
+- Products with scores < 0.8 are not filtered out
+Expected Result:
+- Only return products with similarityScore ≥ 0.8
+- Array length should be ≤ 2 (only 0.85 and maybe 0.72)
+Bug N4: topK Parameter Not Respected - Always Returns 5
+Title: topK parameter ignored, always returns exactly 5 results.
+Environment: Development
+Severity: Medium
+Priority: Medium
+Steps to Reproduce:
+1. Test with topK=1: {"text": "container", "topK": 1, "threshold": 0.5}
+2. Test with topK=10: {"text": "container", "topK": 10, "threshold": 0.5}
+3. Count results
+Actual Result:
+- topK=1 → returns 5 products
+- topK=10 → returns 5 products
+- Always returns exactly 5 regardless of topK value
+Expected Result:
+- topK=1 → returns 1 product
+- topK=10 → returns up to 10 products (or all available if <10)
+Bug N5: Special Characters Break Product Matching
+Title: Text with special characters returns no matches
+Environment: Development
+Severity: Low
+Priority: Low
+Steps to Reproduce:
+1. Send: {"text": "Café & Restaurant Supplies", "topK": 3}
+2. Send: {"text": "24" x 18" board", "topK": 3}
+3. Check response
+Actual Result:
+- matchedProducts: [] (empty array)
+- Status: 200 OK
+Expected Result:
+- Should match "Café" to "Cafe" (accent-insensitive)
+- Should handle quotes in measurements
+- Should return relevant restaurant supplies
+POSITIVE BUGS - Wrong behavior when the API works
+Bug P1: Private Label Ranking Flag Has No Effect
+Title: Private Label Ranking doesn't change result order
+Environment: Development
+Severity: Medium
+Priority: Medium
+Steps to Reproduce:
+1. Send request with flag false: {"text": "cutting board", "enablePrivateLabelRanking":
+false}
+2. Send request with flag true: {"text": "cutting board", "enablePrivateLabelRanking":
+true}
+3. Compare results
+Actual Result:
+- Both requests return identical product lists in the same order
+- Private label products (store brands) are not prioritized when flag=true
+Expected Result:
+- When flag=true, private label products should appear first
+- Example: "StoreBrand Cutting Board" should rank above "PremiumBrand Cutting
+Board."
+Bug P2: High Similarity Score for Irrelevant Product
+Title: Unrelated product gets 0.89 similarity score for "Cutting Board"
+Environment: Development
+Severity: High
+Priority: High
+Steps to Reproduce:
+1. Send: {"text": "Plastic Cutting Board 24x18", "topK": 3, "threshold": 0.5}
+2. Check the first result
+Actual Result:
+- First match: {"name": "Plastic Spoon 100pk", "similarityScore": 0.89}
+- Actual cutting boards have scores 0.72, 0.65, 0.58
+Expected Result:
+- Cutting board products should have the highest scores (0.8+)
+- Spoons should have low scores (<0.3) for the cutting board query
+Bug P3: URL Upload Returns Wrong Website Content
+Title: Upload URL extracts navigation text instead of product
+Environment: Development
+Severity: High
+Priority: High
+Steps to Reproduce:
+- Find product page (e.g., Amazon kitchen knife)
+- Send URL to /upload-url-html
+- Check extracted text
+Actual Result:
+- Extracted text: "Home > Kitchen > Cutlery > Sign in > Cart (0)"
+- Missing: Product name, description, specifications
+- Result: Matches to "Home" furniture instead of knives
+Expected Result:
+- Should extract product title, description, specs
+- Should match the relevant kitchen knives
+- Should ignore navigation, headers, and footers
+Bug P4: Similarity Score Inconsistent for Same Product
+Title: Same product gets different scores in consecutive requests
+Environment: Development
+Severity: Medium
+Priority: Medium
+Steps to Reproduce:
+1. Send the same request 3 times: {"text": "Green Polyethylene Board", "topK": 1}
+2. Record similarityScore each time
+Actual Result:
+- Attempt 1: 0.78
+- Attempt 2: 0.82
+- Attempt 3: 0.75
+- ±0.07 variation for identical input
+Expected Result:
+- Same input should produce the same similarity score (±0.01)
+- Scoring should be deterministic
+Bug P5: Missing Product Key Information in Results
+Title: Matched products missing price, SKU, vendor fields
+Environment: Development
+Severity: Low
+Priority: Low
+Steps to Reproduce:
+1. Send any valid request
+2. Check the first matchedProduct object structure
+Actual Result:
+json
+{
+"matchedProducts": [{
+"name": "Cutting Board",
+"description": "Green polyethylene",
+"similarityScore": 0.82
+// Missing: price, sku, vendor, stock, imageUrl
+}]
+}
+Expected Result:
+json
+{
+"matchedProducts": [{
+"name": "Cutting Board",
+"description": "Green polyethylene",
+"similarityScore": 0.82,
+"price": 24.99,
+"sku": "CB-GRN-24",
+"vendor": "Choice",
+"inStock": true,
+"imageUrl": "https://..."
+}]
+}
+README
+Setvi-Task - RFQ API Test Collection
+Quick Start
+1. Import to Postman: Open the URL link from above
+2. Run Tests: Click the collection → "Run."
+Tests Included
+Positive
+Bug P1: Private Label Ranking Flag Has No Effect
+Bug P2: High Similarity Score for Irrelevant Product
+Bug P3: URL Upload Returns Wrong Website Content
+Bug P4: Similarity Score Inconsistent for Same Product
+Bug P5: Missing Product Key Information in Results
+Negative
+Bug N1: Empty Text Returns 200 Instead of 400
+Bug N2: Invalid URL Causes Server Error 500
+Bug P3: URL Upload Returns Wrong Website Content
+Bug N4: topK Parameter Not Respected - Always Returns 5
+Bug N5: Special Characters Break Product Matching
+Variables
+- `baseUrl`: https://intelligence-dev.setvi.com
+- `apiKey`: Your API key (already set)
+- `threshold`: 0.5 (default confidence)
+Running All Tests
+1. Click the collection name "Setvi-Task."
+2. Click the "Run" button
+3. View results in Runner tab
+Troubleshooting
+- 401 Error: Check API key in Variables
+- 403 Error: URL is blocked - use a different site
+- 404 Error: Check the baseUrl is correct
+- Slow response: API or network issue

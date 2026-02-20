@@ -1,0 +1,158 @@
+{
+  "n1_empty_text_cases": [
+    {
+      "payload": {
+        "text": "",
+        "topK": 3,
+        "threshold": 0.5,
+        "enablePrivateLabelRanking": false
+      },
+      "expected_status": 400,
+      "expected_response": {
+        "error_code": "BadRequest",
+        "message_contains": "must not be null"
+      },
+      "desc": "empty text"
+    }
+  ],
+  "n2_invalid_url_cases": [
+    {
+      "payload": {
+        "url": "not-a-valid-url-format",
+        "topK": 3,
+        "threshold": 0.5
+      },
+      "expected_status": 400,
+      "expected_response": {
+        "error_code": "Fail",
+        "message_contains": "Call failed with"
+      },
+      "desc": "invalid url format"
+    }
+  ],
+  "n3_threshold_cases": [
+    {
+      "payload": {
+        "text": "Cutting Board",
+        "topK": 5,
+        "threshold": 0.8,
+        "enablePrivateLabelRanking": false
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "cutting board 80% threshold"
+    }
+  ],
+  "n4_topk_cases": [
+    {
+      "payload": {
+        "text": "container",
+        "topK": 1,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "expected_max": 1,
+      "desc": "topK=1"
+    },
+    {
+      "payload": {
+        "text": "container",
+        "topK": 10,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "expected_max": 10,
+      "desc": "topK=10"
+    }
+  ],
+  "n5_special_chars_cases": [
+    {
+      "payload": {
+        "text": "Café & Restaurant Supplies",
+        "topK": 3,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "accents and ampersand"
+    },
+    {
+      "payload": {
+        "text": "24\" x 18\" board",
+        "topK": 3,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "quotes in measurements"
+    }
+  ],
+  "p1_private_label_cases": [
+    {
+      "payload": {
+        "text": "cutting board",
+        "topK": 5,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "cutting board"
+    }
+  ],
+  "p2_relevance_cases": [
+    {
+      "payload": {
+        "text": "Plastic Cutting Board 24x18",
+        "topK": 5,
+        "threshold": 0.5,
+        "enablePrivateLabelRanking": false
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "plastic cutting board"
+    }
+  ],
+  "p3_url_extraction_cases": [
+    {
+      "payload": {
+        "url": "https://www.example.com/product/kitchen-knife",
+        "topK": 3,
+        "threshold": 0.5
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "desc": "example product url"
+    }
+  ],
+  "p4_consistency_cases": [
+    {
+      "payload": {
+        "text": "Green Polyethylene Board",
+        "topK": 1,
+        "threshold": 0.5,
+        "enablePrivateLabelRanking": false
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "attempts": 3,
+      "max_variation": 1,
+      "desc": "green polyethylene board"
+    }
+  ],
+  "p5_completeness_cases": [
+    {
+      "payload": {
+        "text": "Cutting Board",
+        "topK": 3,
+        "threshold": 0.5,
+        "enablePrivateLabelRanking": false
+      },
+      "expected_status": 200,
+      "expected_response": {},
+      "required_fields": ["name", "sku", "vendor", "price", "inStock", "imageUrl"],
+      "desc": "cutting board fields"
+    }
+  ]
+}
