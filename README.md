@@ -81,6 +81,11 @@ HTML report (generated after each run):
 reports/report.html
 ```
 
+JUnit XML report (for CI/CD):
+```
+reports/junit.xml
+```
+
 Logs (request/response details, response times):
 ```
 logs/test_execution.log
@@ -154,7 +159,9 @@ Each test:
 GitHub Actions workflow runs tests automatically on push/PR:
 - Workflow: `.github/workflows/tests.yml`
 - Requires GitHub Secrets: `API_KEY`, `BASE_URL`
-- Generates test report artifact
+- Displays test results directly in PR with pass/fail status
+- Generates HTML report artifact (downloadable)
+- JUnit XML report for test result annotations
 
 ## Troubleshooting
 

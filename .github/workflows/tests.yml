@@ -34,6 +34,13 @@ jobs:
       run: |
         pytest tests/test_negative_scenarios.py tests/test_positive_scenarios.py -v
 
+    - name: Publish test results
+      if: always()
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        files: reports/junit.xml
+        check_name: Test Results
+
     - name: Upload test report
       if: always()
       uses: actions/upload-artifact@v4
