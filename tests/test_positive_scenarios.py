@@ -65,13 +65,15 @@ def test_p2_high_percentage_score_for_irrelevant_product(api_client: APIClient, 
 
     if len(matched_products) > 0:
         top_product = matched_products[0]
-        product_name = top_product.get("name", "")
+        product_name = top_product.get("name", "").lower()
         percentage = top_product.get("percentage", 0)
 
-        logger.info(f"Top matched product: '{product_name}' with percentage {percentage}%")
+        logger.info(f"Top matched product: '{top_product.get('name')}' with percentage {percentage}%")
 
-        assert "board" in product_name.lower() or "cutting" in product_name.lower(), \
-            f"Top product '{product_name}' with percentage {percentage}% is not relevant to 'Cutting Board'"
+        is_relevant = any(keyword in product_name for keyword in case["expected_keywords"])
+
+        assert is_relevant, \
+            f"Top product '{top_product.get('name')}' ({percentage}%) not relevant. Expected keywords: {case['expected_keywords']}"
 
 
 @pytest.mark.positive
