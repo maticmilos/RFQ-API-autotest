@@ -111,6 +111,7 @@
       },
       "expected_status": 200,
       "expected_response": {},
+      "expected_keywords": ["board", "cutting"],
       "desc": "plastic cutting board"
     }
   ],
